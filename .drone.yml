@@ -1,0 +1,28 @@
+pipeline:
+  restore-cache:
+    image: drillster/drone-volume-cache
+    restore: true
+    mount: [ /drone/.gradle, /drone/.m2 ]
+    volumes: /cache:/cache
+
+  build:
+    image: java:openjdk-8
+    environment:
+      - M2_HOME=/drone/.m2
+      - MAVEN_HOME=/drone/.m2
+      - GRADLE_USER_HOME=/drone/.gradle
+    commands:
+      - ./gradlew acceptanceTest
+  
+  report:
+    image: eisenxu/junit-reportor
+    when: 
+      status: [ success, failure ]
+
+  rebuild-cache:
+    image: drillster/drone-volume-cache
+    rebuild: true
+    mount: [ /drone/.gradle, /drone/.m2 ]
+    volumes: /cache:/cache
+    when: 
+      status: [ success, failure ]
